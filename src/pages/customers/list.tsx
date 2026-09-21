@@ -28,13 +28,19 @@ const CustomerList: React.FC = () => {
   const navigate = useNavigate();
   const state = useSelector((state: RootState) => state.app);
   const [searchText, setSearchText] = useState('');
+  const [levelFilter, setLevelFilter] = useState<string>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
 
   const filteredCustomers = state.customers.filter(
-    (c) =>
-      c.name.includes(searchText) ||
-      c.phone.includes(searchText)
+    (c) => {
+      if (!c.name.includes(searchText) && !c.phone.includes(searchText)) return false;
+      if (levelFilter) {
+        const membership = state.memberships.find((m) => m.customerId === c.id);
+        if (membership?.level !== levelFilter) return false;
+      }
+      return true;
+    }
   );
 
   const handleAdd = () => {
@@ -68,7 +74,7 @@ const CustomerList: React.FC = () => {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: '确认删除',
-      content: '确定要删除该顾客吗？',
+      content: '删除后该顾客的会员卡、过敏史、皮肤分析、预约、服务与评价等全部记录将一并删除，且无法恢复。确定要删除吗？',
       okText: '确认',
       cancelText: '取消',
       onOk: () => {
@@ -107,15 +113,8 @@ const CustomerList: React.FC = () => {
       title: '会员等级',
       key: 'membership',
       render: (_: unknown, record: Customer) => {
-        const membership = state.memberships.find((m) => m.id === record.id);
+        const membership = state.memberships.find((m) => m.customerId === record.id);
         if (!membership) return <Tag>普通</Tag>;
-        const levelColors: Record<string, string> = {
-          bronze: 'orange',
-          silver: 'default',
-          gold: 'gold',
-          platinum: 'cyan',
-          diamond: 'geekblue',
-        };
         return (
           <span className={`membership-badge ${membership.level}`}>
             {getStatusText(membership.level)}
@@ -127,7 +126,7 @@ const CustomerList: React.FC = () => {
       title: '累计消费',
       key: 'totalSpent',
       render: (_: unknown, record: Customer) => {
-        const membership = state.memberships.find((m) => m.id === record.id);
+        const membership = state.memberships.find((m) => m.customerId === record.id);
         return membership ? `¥${membership.totalSpent.toLocaleString()}` : '¥0';
       },
     },
@@ -192,6 +191,8 @@ const CustomerList: React.FC = () => {
               placeholder="会员等级"
               style={{ width: '100%' }}
               allowClear
+              value={levelFilter}
+              onChange={(value) => setLevelFilter(value)}
               options={[
                 { value: 'bronze', label: '青铜' },
                 { value: 'silver', label: '白银' },

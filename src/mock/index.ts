@@ -1,4 +1,5 @@
 import Mock from 'mockjs';
+import type { Membership } from '../types';
 
 const Random = Mock.Random;
 
@@ -107,29 +108,41 @@ export const mockAllergies = (customerIds: string[]) => {
   return allergies;
 };
 
-export const mockMemberships = (customerIds: string[]) => {
-  const memberships = [];
-  const levels = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
+export const getMembershipLevel = (totalSpent: number): Membership['level'] => {
+  if (totalSpent > 30000) return 'diamond';
+  if (totalSpent > 20000) return 'platinum';
+  if (totalSpent > 10000) return 'gold';
+  if (totalSpent > 5000) return 'silver';
+  return 'bronze';
+};
 
-  customerIds.forEach((customerId) => {
-    const totalSpent = Random.integer(500, 50000);
-    let level = 'bronze';
-    if (totalSpent > 30000) level = 'diamond';
-    else if (totalSpent > 20000) level = 'platinum';
-    else if (totalSpent > 10000) level = 'gold';
-    else if (totalSpent > 5000) level = 'silver';
-
-    memberships.push({
-      id: `M${String(memberships.length + 1).padStart(6, '0')}`,
-      customerId,
-      level,
-      points: Math.floor(totalSpent / 10),
-      totalSpent,
-      joinDate: Random.datetime('yyyy-MM-dd'),
-      expireDate: '2026-12-31'
+export const mockMemberships = (
+  customers: ReturnType<typeof mockCustomers>,
+  serviceRecords: ReturnType<typeof mockServiceRecords>
+) => {
+  // 会员的累计消费/积分/等级一律从服务记录汇总，保证各页面口径一致
+  const stats = new Map<string, { totalSpent: number; earliest: string }>();
+  serviceRecords.forEach((record) => {
+    const prev = stats.get(record.customerId) || { totalSpent: 0, earliest: record.serviceDate };
+    stats.set(record.customerId, {
+      totalSpent: prev.totalSpent + record.price,
+      earliest: record.serviceDate < prev.earliest ? record.serviceDate : prev.earliest,
     });
   });
-  return memberships;
+
+  return customers.map((customer, index) => {
+    const stat = stats.get(customer.id);
+    const totalSpent = stat?.totalSpent || 0;
+    return {
+      id: `M${String(index + 1).padStart(6, '0')}`,
+      customerId: customer.id,
+      level: getMembershipLevel(totalSpent),
+      points: Math.floor(totalSpent / 10),
+      totalSpent,
+      joinDate: stat?.earliest || customer.createdAt,
+      expireDate: '2026-12-31'
+    };
+  });
 };
 
 export const mockServices = () => {

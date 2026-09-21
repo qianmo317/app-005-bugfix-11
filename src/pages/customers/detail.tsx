@@ -402,7 +402,7 @@ const CustomerDetail: React.FC = () => {
                   <Card className="card-wrapper" title="消费统计">
                     <Descriptions column={1}>
                       <Descriptions.Item label="总消费次数">
-                        {state.serviceRecords.length} 次
+                        {serviceRecords.length} 次
                       </Descriptions.Item>
                       <Descriptions.Item label="总消费金额">
                         {formatCurrency(membership?.totalSpent || 0)}
