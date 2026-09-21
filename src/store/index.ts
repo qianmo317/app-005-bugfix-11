@@ -1,5 +1,6 @@
 import { configureStore, createSlice, PayloadAction, combineReducers } from '@reduxjs/toolkit';
 import { storage } from '../utils/storage';
+import { getMembershipLevel, syncMembershipFromRecords } from '../utils/membership';
 import type {
   Customer,
   SkinAnalysis,
@@ -56,6 +57,49 @@ interface AppState {
 
 const STORAGE_KEY = 'app_state';
 
+/**
+ * 校正已持久化的旧数据，保证以下不变量：
+ * 1. 所有关联数据（会员卡、皮肤分析、过敏史、消费记录、预约、评价、候补、提成）
+ *    都必须挂在现存顾客/消费记录上，已删除顾客的残留一律清除；
+ * 2. 每位顾客都有且只有一张会员卡；
+ * 3. 会员卡的累计消费/积分/等级以其名下服务记录汇总为准，
+ *    确保各页面显示的是同一套数字。
+ */
+const reconcileState = (state: AppState): AppState => {
+  const customerIds = new Set(state.customers.map((c) => c.id));
+
+  state.memberships = state.memberships.filter((m) => customerIds.has(m.customerId));
+  state.skinAnalyses = state.skinAnalyses.filter((s) => customerIds.has(s.customerId));
+  state.allergies = state.allergies.filter((a) => customerIds.has(a.customerId));
+  state.serviceRecords = state.serviceRecords.filter((r) => customerIds.has(r.customerId));
+  state.appointments = state.appointments.filter((a) => customerIds.has(a.customerId));
+  state.reviews = state.reviews.filter((r) => customerIds.has(r.customerId));
+  state.waitList = state.waitList.filter((w) => customerIds.has(w.customerId));
+
+  const recordIds = new Set(state.serviceRecords.map((r) => r.id));
+  state.commissions = state.commissions.filter((c) => recordIds.has(c.serviceRecordId));
+
+  state.customers.forEach((customer) => {
+    if (!state.memberships.some((m) => m.customerId === customer.id)) {
+      state.memberships.push({
+        id: `M-${customer.id}`,
+        customerId: customer.id,
+        level: 'bronze',
+        points: 0,
+        totalSpent: 0,
+        joinDate: customer.createdAt.split('T')[0],
+        expireDate: ''
+      });
+    }
+  });
+
+  state.memberships = state.memberships.map((m) =>
+    syncMembershipFromRecords(m, state.serviceRecords)
+  );
+
+  return state;
+};
+
 const loadState = (): AppState => {
   try {
     const saved = storage.get<AppState>(STORAGE_KEY);
@@ -66,7 +110,7 @@ const loadState = (): AppState => {
         const b64 = firstCustomer.avatar.replace('data:image/svg+xml;base64,', '');
         try {
           atob(b64);
-          return saved;
+          return reconcileState(saved);
         } catch (e) {
           console.log('Detected corrupted data, regenerating...');
           storage.clear();
@@ -84,18 +128,19 @@ const loadState = (): AppState => {
   const employees = mockEmployees() as Employee[];
   const employeeIds = employees.map(e => e.id);
   const packages = mockPackages() as Package[];
+  const serviceRecords = mockServiceRecords(customerIds, serviceIds, employeeIds);
 
   return {
     customers,
     skinAnalyses: mockSkinAnalyses(customerIds),
     allergies: mockAllergies(customerIds),
-    memberships: mockMemberships(customerIds),
+    memberships: mockMemberships(customerIds, serviceRecords),
     services,
     packages,
     packageItems: mockPackageItems(packages),
     employees,
     appointments: mockAppointments(customerIds, serviceIds, employeeIds),
-    serviceRecords: mockServiceRecords(customerIds, serviceIds, employeeIds),
+    serviceRecords,
     schedules: mockSchedules(employeeIds),
     reviews: mockReviews(customerIds, employeeIds, serviceIds),
     attendance: mockAttendance(employeeIds),
@@ -117,6 +162,18 @@ const appSlice = createSlice({
   reducers: {
     addCustomer: (state, action: PayloadAction<Customer>) => {
       state.customers.unshift(action.payload);
+      // 新顾客同步建立会员卡（青铜、累计消费 0），
+      // 保证列表/详情/仪表板的会员统计口径一致
+      const joinDate = action.payload.createdAt.split('T')[0];
+      state.memberships.unshift({
+        id: `M-${action.payload.id}`,
+        customerId: action.payload.id,
+        level: 'bronze',
+        points: 0,
+        totalSpent: 0,
+        joinDate,
+        expireDate: ''
+      });
       saveState(state);
     },
     updateCustomer: (state, action: PayloadAction<Customer>) => {
@@ -127,8 +184,21 @@ const appSlice = createSlice({
       }
     },
     deleteCustomer: (state, action: PayloadAction<string>) => {
-      state.customers = state.customers.filter(c => c.id !== action.payload);
-      state.allergies = state.allergies.filter(a => a.customerId !== action.payload);
+      const customerId = action.payload;
+      // 级联清除该顾客的全部关联数据：会员卡、皮肤分析、过敏史、
+      // 消费记录（及对应提成）、预约、评价、候补，保证各页面统计一致
+      const removedRecordIds = new Set(
+        state.serviceRecords.filter((r) => r.customerId === customerId).map((r) => r.id)
+      );
+      state.customers = state.customers.filter((c) => c.id !== customerId);
+      state.memberships = state.memberships.filter((m) => m.customerId !== customerId);
+      state.skinAnalyses = state.skinAnalyses.filter((s) => s.customerId !== customerId);
+      state.allergies = state.allergies.filter((a) => a.customerId !== customerId);
+      state.serviceRecords = state.serviceRecords.filter((r) => r.customerId !== customerId);
+      state.commissions = state.commissions.filter((c) => !removedRecordIds.has(c.serviceRecordId));
+      state.appointments = state.appointments.filter((a) => a.customerId !== customerId);
+      state.reviews = state.reviews.filter((r) => r.customerId !== customerId);
+      state.waitList = state.waitList.filter((w) => w.customerId !== customerId);
       saveState(state);
     },
     addSkinAnalysis: (state, action: PayloadAction<SkinAnalysis>) => {
@@ -232,10 +302,7 @@ const appSlice = createSlice({
       if (membership) {
         membership.totalSpent += action.payload.price;
         membership.points += Math.floor(action.payload.price / 10);
-        if (membership.totalSpent > 30000) membership.level = 'diamond';
-        else if (membership.totalSpent > 20000) membership.level = 'platinum';
-        else if (membership.totalSpent > 10000) membership.level = 'gold';
-        else if (membership.totalSpent > 5000) membership.level = 'silver';
+        membership.level = getMembershipLevel(membership.totalSpent);
       }
       saveState(state);
     }

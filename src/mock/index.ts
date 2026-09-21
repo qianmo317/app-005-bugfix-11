@@ -1,4 +1,6 @@
 import Mock from 'mockjs';
+import type { ServiceRecord } from '../types';
+import { syncMembershipFromRecords } from '../utils/membership';
 
 const Random = Mock.Random;
 
@@ -107,29 +109,23 @@ export const mockAllergies = (customerIds: string[]) => {
   return allergies;
 };
 
-export const mockMemberships = (customerIds: string[]) => {
-  const memberships = [];
-  const levels = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
-
-  customerIds.forEach((customerId) => {
-    const totalSpent = Random.integer(500, 50000);
-    let level = 'bronze';
-    if (totalSpent > 30000) level = 'diamond';
-    else if (totalSpent > 20000) level = 'platinum';
-    else if (totalSpent > 10000) level = 'gold';
-    else if (totalSpent > 5000) level = 'silver';
-
-    memberships.push({
-      id: `M${String(memberships.length + 1).padStart(6, '0')}`,
-      customerId,
-      level,
-      points: Math.floor(totalSpent / 10),
-      totalSpent,
-      joinDate: Random.datetime('yyyy-MM-dd'),
-      expireDate: '2026-12-31'
-    });
-  });
-  return memberships;
+export const mockMemberships = (customerIds: string[], serviceRecords: ServiceRecord[]) => {
+  // 会员卡累计消费/积分/等级一律由该顾客的服务记录汇总得出，
+  // 保证列表、详情、仪表板各处显示的是同一套数字
+  return customerIds.map((customerId, index) =>
+    syncMembershipFromRecords(
+      {
+        id: `M${String(index + 1).padStart(6, '0')}`,
+        customerId,
+        level: 'bronze',
+        points: 0,
+        totalSpent: 0,
+        joinDate: Random.datetime('yyyy-MM-dd'),
+        expireDate: '2026-12-31'
+      },
+      serviceRecords
+    )
+  );
 };
 
 export const mockServices = () => {
@@ -254,20 +250,25 @@ export const mockServiceRecords = (
   employeeIds: string[]
 ) => {
   const records = [];
-  for (let i = 0; i < 200; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - Random.integer(1, 60));
+  // 按顾客生成消费记录，每位顾客 0~45 次，
+  // 累计消费额由此自然拉开差距，会员等级分布更真实
+  customerIds.forEach((customerId) => {
+    const count = Random.integer(0, 45);
+    for (let i = 0; i < count; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - Random.integer(1, 60));
 
-    records.push({
-      id: `SR${String(i + 1).padStart(6, '0')}`,
-      customerId: customerIds[Random.integer(0, customerIds.length - 1)],
-      serviceId: serviceIds[Random.integer(0, serviceIds.length - 1)],
-      employeeId: employeeIds[Random.integer(0, employeeIds.length - 1)],
-      serviceDate: date.toISOString(),
-      price: Random.integer(200, 1500),
-      notes: Random.cparagraph(1)
-    });
-  }
+      records.push({
+        id: `SR${String(records.length + 1).padStart(6, '0')}`,
+        customerId,
+        serviceId: serviceIds[Random.integer(0, serviceIds.length - 1)],
+        employeeId: employeeIds[Random.integer(0, employeeIds.length - 1)],
+        serviceDate: date.toISOString(),
+        price: Random.integer(200, 1500),
+        notes: Random.cparagraph(1)
+      });
+    }
+  });
   return records;
 };
 

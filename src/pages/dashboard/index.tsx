@@ -329,7 +329,9 @@ const Dashboard: React.FC = () => {
               };
               return levels.map((level) => {
                 const count = state.memberships.filter((m) => m.level === level).length;
-                const percent = (count / state.memberships.length) * 100;
+                const percent = state.memberships.length > 0
+                  ? (count / state.memberships.length) * 100
+                  : 0;
                 return (
                   <div key={level} style={{ marginBottom: 16 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>

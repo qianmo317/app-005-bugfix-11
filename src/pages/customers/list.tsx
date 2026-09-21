@@ -68,7 +68,7 @@ const CustomerList: React.FC = () => {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: '确认删除',
-      content: '确定要删除该顾客吗？',
+      content: '删除后将一并清除该顾客的会员卡、皮肤分析、过敏史、消费记录、预约、评价及候补记录，且不可恢复。确定要删除该顾客吗？',
       okText: '确认',
       cancelText: '取消',
       onOk: () => {
@@ -107,7 +107,7 @@ const CustomerList: React.FC = () => {
       title: '会员等级',
       key: 'membership',
       render: (_: unknown, record: Customer) => {
-        const membership = state.memberships.find((m) => m.id === record.id);
+        const membership = state.memberships.find((m) => m.customerId === record.id);
         if (!membership) return <Tag>普通</Tag>;
         const levelColors: Record<string, string> = {
           bronze: 'orange',
@@ -127,7 +127,7 @@ const CustomerList: React.FC = () => {
       title: '累计消费',
       key: 'totalSpent',
       render: (_: unknown, record: Customer) => {
-        const membership = state.memberships.find((m) => m.id === record.id);
+        const membership = state.memberships.find((m) => m.customerId === record.id);
         return membership ? `¥${membership.totalSpent.toLocaleString()}` : '¥0';
       },
     },
