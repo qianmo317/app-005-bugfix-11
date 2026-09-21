@@ -1,0 +1,468 @@
+@primary-color: #C9A86C;
+@info-color: #E8C1BA;
+@success-color: #52c41a;
+@warning-color: #faad14;
+@error-color: #ff4d4f;
+@text-color: #3A3A3A;
+@text-secondary-color: #8c8c8c;
+@border-color: #f0f0f0;
+@background-color: #FAFAFA;
+@card-background: #ffffff;
+@shadow-color: rgba(201, 168, 108, 0.15);
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: @background-color;
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: @text-color;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+}
+
+.app-header {
+  background: linear-gradient(135deg, #E8C1BA 0%, #D4A0A0 100%);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px @shadow-color;
+}
+
+.app-logo {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-sidebar {
+  width: 220px;
+  background: #fff;
+  border-right: 1px solid @border-color;
+  min-height: calc(100vh - 64px);
+  padding: 16px 0;
+  flex-shrink: 0;
+}
+
+.app-sidebar .ant-menu {
+  border-inline-end: none !important;
+}
+
+.app-main {
+  flex: 1;
+  padding: 24px;
+  min-width: 0;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px @shadow-color;
+    transform: translateY(-2px);
+  }
+
+  &-title {
+    font-size: 14px;
+    color: @text-secondary-color;
+    margin-bottom: 8px;
+  }
+
+  &-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: @text-color;
+  }
+
+  &-trend {
+    font-size: 12px;
+    margin-top: 8px;
+
+    &.up {
+      color: @success-color;
+    }
+
+    &.down {
+      color: @error-color;
+    }
+  }
+}
+
+.grad-card {
+  background: linear-gradient(135deg, #E8C1BA 0%, #D4A0A0 100%);
+  color: #fff;
+
+  .stat-card-title,
+  .stat-card-value {
+    color: #fff;
+  }
+
+  .stat-card-value {
+    font-size: 32px;
+  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  &-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: @text-color;
+    margin: 0;
+  }
+
+  &-subtitle {
+    font-size: 14px;
+    color: @text-secondary-color;
+    margin-top: 4px;
+  }
+}
+
+.search-bar {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.card-wrapper {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
+}
+
+.customer-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E8C1BA 0%, #D4A0A0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.membership-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.bronze {
+    background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+    color: #fff;
+  }
+
+  &.silver {
+    background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
+    color: #fff;
+  }
+
+  &.gold {
+    background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+    color: #fff;
+  }
+
+  &.platinum {
+    background: linear-gradient(135deg, #e5e4e2 0%, #c0c0c0 100%);
+    color: #3A3A3A;
+  }
+
+  &.diamond {
+    background: linear-gradient(135deg, #b9f2ff 0%, #70d1f4 100%);
+    color: #3A3A3A;
+  }
+}
+
+.schedule-cell {
+  padding: 8px;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 12px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  &.morning {
+    background: rgba(105, 177, 255, 0.15);
+    color: #1677ff;
+  }
+
+  &.afternoon {
+    background: rgba(149, 222, 100, 0.15);
+    color: #52c41a;
+  }
+
+  &.full_day {
+    background: rgba(255, 169, 64, 0.15);
+    color: #faad14;
+  }
+
+  &.off {
+    background: rgba(217, 217, 217, 0.15);
+    color: #8c8c8c;
+  }
+
+  &.overtime {
+    background: rgba(255, 120, 117, 0.15);
+    color: #ff4d4f;
+  }
+}
+
+.appointment-slot {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border-left: 4px solid;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateX(4px);
+  }
+
+  &.pending {
+    border-color: @warning-color;
+    background: rgba(250, 173, 20, 0.06);
+  }
+
+  &.confirmed {
+    border-color: @info-color;
+    background: rgba(22, 119, 255, 0.06);
+  }
+
+  &.completed {
+    border-color: @success-color;
+    background: rgba(82, 196, 26, 0.06);
+  }
+
+  &.cancelled {
+    border-color: @text-secondary-color;
+    background: rgba(140, 140, 140, 0.06);
+  }
+
+  &.no_show {
+    border-color: @error-color;
+    background: rgba(255, 77, 79, 0.06);
+  }
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 24px;
+  padding-bottom: 16px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 0;
+    width: 2px;
+    background: @border-color;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: @primary-color;
+  }
+
+  &-date {
+    font-size: 12px;
+    color: @text-secondary-color;
+  }
+
+  &-content {
+    font-size: 14px;
+    color: @text-color;
+    margin-top: 4px;
+  }
+}
+
+.chart-container {
+  width: 100%;
+  height: 300px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+  color: @text-secondary-color;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(135deg, #C9A86C 0%, #B8956A 100%);
+  border-color: #C9A86C;
+
+  &:hover {
+    background: linear-gradient(135deg, #D4B97A 0%, #C9A86C 100%) !important;
+    border-color: #D4B97A !important;
+  }
+}
+
+.ant-table-thead > tr > th {
+  background: #fafafa !important;
+  font-weight: 600;
+}
+
+.ant-modal-content {
+  border-radius: 12px;
+}
+
+.react-calendar {
+  width: 100%;
+  border: none;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  .react-calendar__navigation {
+    margin-bottom: 16px;
+
+    button {
+      background: none;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      color: @text-color;
+      cursor: pointer;
+
+      &:hover {
+        color: @primary-color;
+      }
+    }
+  }
+
+  .react-calendar__month-view__weekdays {
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: @text-secondary-color;
+    margin-bottom: 8px;
+
+    abbr {
+      text-decoration: none;
+    }
+  }
+
+  .react-calendar__tile {
+    padding: 12px 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    cursor: pointer;
+    position: relative;
+
+    &:hover {
+      background: rgba(201, 168, 108, 0.1);
+    }
+
+    &.react-calendar__tile--active {
+      background: linear-gradient(135deg, #E8C1BA 0%, #D4A0A0 100%);
+      color: #fff;
+
+      &:hover {
+        background: linear-gradient(135deg, #E8C1BA 0%, #D4A0A0 100%);
+      }
+    }
+
+    &.react-calendar__tile--now {
+      background: rgba(201, 168, 108, 0.15);
+    }
+
+    &-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    &-dots {
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      margin-top: 4px;
+    }
+
+    &-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: @primary-color;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-sidebar {
+    width: 64px;
+
+    .ant-menu-item,
+    .ant-menu-submenu-title {
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    min-height: auto;
+    order: 2;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-right: none;
+    border-top: 1px solid @border-color;
+    padding: 8px 0;
+  }
+
+  .app-main {
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+}
